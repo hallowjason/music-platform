@@ -17,39 +17,97 @@
     body {
         margin: 0;
         padding: 0;
+        background: linear-gradient(135deg, #fef6f0 0%, #fce4ec 100%);
+        min-height: 100vh;
+        overflow: hidden;
     }
     
-    .background-upload-area {
-        position: relative;
+    .page-title {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 10;
+    }
+    
+    .page-title h1 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+        margin: 0;
+    }
+    
+    .page-title p {
+        font-size: 1rem;
+        color: #666;
+        margin: 4px 0 0 0;
+    }
+    
+    .accordion-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
         width: 100%;
-        min-height: 50vh;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+        height: 30vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        align-items: stretch;
+        justify-content: flex-end;
+    }
+    
+    .accordion-container.expanded {
+        height: 82vh;
+    }
+    
+    .accordion-item {
+        position: relative;
+        flex: 1 1 0;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+        overflow: hidden;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: 0;
+    }
+    
+    /* Z-index 層級：最下方的抽屜最高 */
+    .accordion-item[data-song="song1"] { z-index: 1; }
+    .accordion-item[data-song="song2"] { z-index: 2; }
+    .accordion-item[data-song="song3"] { z-index: 3; }
+    .accordion-item[data-song="song4"] { z-index: 4; }
+    .accordion-item[data-song="song5"] { 
+        z-index: 5; 
+        flex: 1 1 0;
+        min-height: 0;
+        position: relative;
+    }
+    
+    .accordion-item.open {
+        flex: 15;
+        z-index: 100 !important;
+    }
+    
+    .accordion-header {
         cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .background-upload-area:hover {
-        opacity: 0.95;
-    }
-    
-    .background-upload-area.has-image .upload-placeholder {
-        display: none;
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
     }
     
     .accordion-content {
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.4s ease-in-out;
+        transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0 24px;
+        position: relative;
+        z-index: 1;
     }
     
     .accordion-item.open .accordion-content {
-        max-height: 1000px;
+        max-height: calc(82vh - 80px);
+        overflow-y: auto;
+        padding: 0 24px 24px 24px;
     }
     
     .accordion-item.open .arrow-icon {
@@ -65,6 +123,8 @@
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+        padding-right: 8px;
+        margin-bottom: 16px;
     }
     
     .lyrics-container::-webkit-scrollbar {
@@ -78,6 +138,19 @@
     .lyrics-container::-webkit-scrollbar-thumb {
         background-color: rgba(255, 255, 255, 0.5);
         border-radius: 3px;
+    }
+    
+    .accordion-content::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .accordion-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .accordion-content::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
     }
     
     input[type="range"] {
@@ -109,52 +182,49 @@
         border: none;
     }
 </style>
+
 </head>
 <body>
-    <!-- 背景圖上傳區域 -->
-    <div id="backgroundArea" class="background-upload-area" style="background: linear-gradient(135deg, #fef6f0 0%, #fce4ec 100%);">
-        <div class="upload-placeholder text-center p-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">song of DAO</h1>
-            <p class="text-xl text-gray-600 mb-8">崇正全新編制：經典聖歌</p>
-            <div class="inline-flex items-center px-6 py-3 bg-white bg-opacity-70 rounded-full shadow-md">
-                <span class="material-icons text-gray-600 mr-2">cloud_upload</span>
-                <span class="text-gray-700 font-medium">點擊上傳背景圖片</span>
-            </div>
-        </div>
-        <input type="file" id="backgroundUpload" accept="image/*" class="hidden"/>
+    <!-- 標題區域 - 左上角 -->
+    <div class="page-title">
+        <h1>song of DAO</h1>
+        <p>崇正全新編制：經典聖歌</p>
     </div>
 
-    <!-- 手風琴式音樂播放器區域 - 無間距、佔滿寬度 -->
-    <div class="w-full">
-        <!-- 抽屜 1: 梨花淚 -->
+    <!-- 手風琴式音樂播放器區域 -->
+    <div class="accordion-container" id="accordionContainer">
+        <!-- 抽屜 1: 梨花淚 (最上方，z-index 最低) -->
         <div class="accordion-item" data-song="song1" style="background-color: #9B4557;">
-            <div class="flex items-center justify-between p-5 cursor-pointer" onclick="toggleAccordion('song1')">
-                <h3 class="text-xl font-semibold text-white">梨花淚</h3>
-                <span class="material-icons text-white arrow-icon">keyboard_arrow_down</span>
+            <div class="accordion-header" onclick="toggleAccordion('song1')">
+                <h3 class="text-s font-semibold text-white">梨花淚</h3>
+                <span class="material-icons text-white arrow-icon" style="font-size: 20px;">keyboard_arrow_down</span>
             </div>
-            <div class="accordion-content px-6 pb-6">
+            <div class="accordion-content">
+                <!-- 隱藏的音訊元素 -->
+                <audio id="audio-song1" src="audio/梨花淚.mp3"></audio>
+                
                 <!-- 播放器區塊 -->
                 <div class="mb-6">
                     <div class="flex items-center gap-4 mb-3">
-                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all">
-                            <span class="material-icons text-white text-3xl">play_arrow</span>
+                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" onclick="togglePlay('song1')">
+                            <span class="material-icons text-white text-3xl" id="play-icon-song1">play_arrow</span>
                         </button>
                         <div class="flex-1">
-                            <input type="range" min="0" max="100" value="0" class="w-full"/>
+                            <input type="range" min="0" max="100" value="0" class="w-full" id="progress-song1" oninput="seekAudio('song1', this.value)"/>
                         </div>
                     </div>
                     <div class="flex justify-between text-sm text-white text-opacity-80">
-                        <span>0:00</span>
-                        <span>3:42</span>
+                        <span id="current-time-song1">0:00</span>
+                        <span id="duration-song1">0:00</span>
                     </div>
                 </div>
 
                 <!-- 製作資訊 -->
                 <div class="mb-4 text-white">
                     <h4 class="font-semibold mb-2 text-lg">製作</h4>
-                    <p class="text-sm leading-relaxed opacity-90">作詞：善才大仙 (2011.08.14 北部行德班22期)</p>
-                    <p class="text-sm leading-relaxed opacity-90">編曲：吳老師祐平</p>
-                    <p class="text-sm leading-relaxed opacity-90">改編：賢德團隊</p>
+                    <p class="text-sm leading-relaxed opacity-90">作詞 善才大仙 (2011.08.14 北部行德班22期)</p>
+                    <p class="text-sm leading-relaxed opacity-90">編曲 吳老師祐平</p>
+                    <p class="text-sm leading-relaxed opacity-90">改編 賢德團隊</p>
                 </div>
 
                 <!-- 曲解 -->
@@ -167,7 +237,7 @@
                 <!-- 歌詞 -->
                 <div class="text-white">
                     <h4 class="font-semibold mb-2 text-lg">歌詞</h4>
-                    <div class="lyrics-container text-sm leading-loose opacity-90">
+                    <div class="lyrics-container text-sm leading-loose opacity-90 text-center">
                         <p>遠遠的那天際</p>
                         <p>倏忽一掠朝迎曦</p>
                         <p>輕輕的這風起</p>
@@ -183,33 +253,36 @@
 
         <!-- 抽屜 2: 天知我地知我 -->
         <div class="accordion-item" data-song="song2" style="background-color: #D7657C;">
-            <div class="flex items-center justify-between p-5 cursor-pointer" onclick="toggleAccordion('song2')">
-                <h3 class="text-xl font-semibold text-white">天知我地知我</h3>
-                <span class="material-icons text-white arrow-icon">keyboard_arrow_down</span>
+            <div class="accordion-header" onclick="toggleAccordion('song2')">
+                <h3 class="text-s font-semibold text-white">天知我地知我</h3>
+                <span class="material-icons text-white arrow-icon" style="font-size: 20px;">keyboard_arrow_down</span>
             </div>
-            <div class="accordion-content px-6 pb-6">
+            <div class="accordion-content">
+                <!-- 隱藏的音訊元素 -->
+                <audio id="audio-song2" src="audio/天知我地知我.mp3"></audio>
+                
                 <!-- 播放器區塊 -->
                 <div class="mb-6">
                     <div class="flex items-center gap-4 mb-3">
-                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all">
-                            <span class="material-icons text-white text-3xl">play_arrow</span>
+                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" onclick="togglePlay('song2')">
+                            <span class="material-icons text-white text-3xl" id="play-icon-song2">play_arrow</span>
                         </button>
                         <div class="flex-1">
-                            <input type="range" min="0" max="100" value="0" class="w-full"/>
+                            <input type="range" min="0" max="100" value="0" class="w-full" id="progress-song2" oninput="seekAudio('song2', this.value)"/>
                         </div>
                     </div>
                     <div class="flex justify-between text-sm text-white text-opacity-80">
-                        <span>0:00</span>
-                        <span>3:42</span>
+                        <span id="current-time-song2">0:00</span>
+                        <span id="duration-song2">0:00</span>
                     </div>
                 </div>
 
                 <!-- 製作資訊 -->
                 <div class="mb-4 text-white">
                     <h4 class="font-semibold mb-2 text-lg">製作</h4>
-                    <p class="text-sm leading-relaxed opacity-90">作詞：—</p>
-                    <p class="text-sm leading-relaxed opacity-90">編曲：—</p>
-                    <p class="text-sm leading-relaxed opacity-90">改編：—</p>
+                    <p class="text-sm leading-relaxed opacity-90">作詞 —</p>
+                    <p class="text-sm leading-relaxed opacity-90">編曲 —</p>
+                    <p class="text-sm leading-relaxed opacity-90">改編 —</p>
                 </div>
 
                 <!-- 曲解 -->
@@ -221,10 +294,27 @@
                 <!-- 歌詞 -->
                 <div class="text-white">
                     <h4 class="font-semibold mb-2 text-lg">歌詞</h4>
-                    <div class="lyrics-container text-sm leading-loose opacity-90">
+                    <div class="lyrics-container text-sm leading-loose opacity-90 text-center">
                         <p>第一段歌詞...</p>
                         <p>第二段歌詞...</p>
                         <p>第三段歌詞...</p>
+                        <p>第四段歌詞...</p>
+                        <p>第五段歌詞...</p>
+                        <p>第六段歌詞...</p>
+                        <p>第七段歌詞...</p>
+                        <p>第八段歌詞...</p>
+                        <p>第九段歌詞...</p>
+                        <p>第十段歌詞...</p>
+                        <p>第十一段歌詞...</p>
+                        <p>第十二段歌詞...</p>
+                        <p>第十三段歌詞...</p>
+                        <p>第十四段歌詞...</p>
+                        <p>第十五段歌詞...</p>
+                        <p>第十六段歌詞...</p>
+                        <p>第十七段歌詞...</p>
+                        <p>第十八段歌詞...</p>
+                        <p>第十九段歌詞...</p>
+                        <p>第二十段歌詞...</p>
                     </div>
                 </div>
             </div>
@@ -232,33 +322,36 @@
 
         <!-- 抽屜 3: Do your best -->
         <div class="accordion-item" data-song="song3" style="background-color: #5C5558;">
-            <div class="flex items-center justify-between p-5 cursor-pointer" onclick="toggleAccordion('song3')">
-                <h3 class="text-xl font-semibold text-white">Do your best</h3>
-                <span class="material-icons text-white arrow-icon">keyboard_arrow_down</span>
+            <div class="accordion-header" onclick="toggleAccordion('song3')">
+                <h3 class="text-s font-semibold text-white">Do your best</h3>
+                <span class="material-icons text-white arrow-icon" style="font-size: 20px;">keyboard_arrow_down</span>
             </div>
-            <div class="accordion-content px-6 pb-6">
+            <div class="accordion-content">
+                <!-- 隱藏的音訊元素 -->
+                <audio id="audio-song3" src="audio/Do-your-best.mp3"></audio>
+                
                 <!-- 播放器區塊 -->
                 <div class="mb-6">
                     <div class="flex items-center gap-4 mb-3">
-                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all">
-                            <span class="material-icons text-white text-3xl">play_arrow</span>
+                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" onclick="togglePlay('song3')">
+                            <span class="material-icons text-white text-3xl" id="play-icon-song3">play_arrow</span>
                         </button>
                         <div class="flex-1">
-                            <input type="range" min="0" max="100" value="0" class="w-full"/>
+                            <input type="range" min="0" max="100" value="0" class="w-full" id="progress-song3" oninput="seekAudio('song3', this.value)"/>
                         </div>
                     </div>
                     <div class="flex justify-between text-sm text-white text-opacity-80">
-                        <span>0:00</span>
-                        <span>3:42</span>
+                        <span id="current-time-song3">0:00</span>
+                        <span id="duration-song3">0:00</span>
                     </div>
                 </div>
 
                 <!-- 製作資訊 -->
                 <div class="mb-4 text-white">
                     <h4 class="font-semibold mb-2 text-lg">製作</h4>
-                    <p class="text-sm leading-relaxed opacity-90">作詞：—</p>
-                    <p class="text-sm leading-relaxed opacity-90">編曲：—</p>
-                    <p class="text-sm leading-relaxed opacity-90">改編：—</p>
+                    <p class="text-sm leading-relaxed opacity-90">作詞 —</p>
+                    <p class="text-sm leading-relaxed opacity-90">編曲 —</p>
+                    <p class="text-sm leading-relaxed opacity-90">改編 —</p>
                 </div>
 
                 <!-- 曲解 -->
@@ -270,10 +363,27 @@
                 <!-- 歌詞 -->
                 <div class="text-white">
                     <h4 class="font-semibold mb-2 text-lg">歌詞</h4>
-                    <div class="lyrics-container text-sm leading-loose opacity-90">
-                        <p>第一段歌詞...</p>
-                        <p>第二段歌詞...</p>
-                        <p>第三段歌詞...</p>
+                    <div class="lyrics-container text-sm leading-loose opacity-90 text-center">
+                        <p>Do your best, do your best</p>
+                        <p>Never give up, never rest</p>
+                        <p>Keep on trying, day by day</p>
+                        <p>You will find the perfect way</p>
+                        <p>Believe in yourself, you can do it</p>
+                        <p>Don't let anyone tell you different</p>
+                        <p>Stand up tall and face the world</p>
+                        <p>Let your flag be unfurled</p>
+                        <p>Through the storm and through the rain</p>
+                        <p>You will overcome the pain</p>
+                        <p>Every step you take is progress</p>
+                        <p>Don't let failure cause you stress</p>
+                        <p>Keep on moving, keep on growing</p>
+                        <p>Let your inner light keep glowing</p>
+                        <p>Do your best, that's all you need</p>
+                        <p>Plant the seed and watch it grow</p>
+                        <p>In your heart, the fire burns</p>
+                        <p>For success, your spirit yearns</p>
+                        <p>Do your best, do your best</p>
+                        <p>You will pass every test</p>
                     </div>
                 </div>
             </div>
@@ -281,33 +391,36 @@
 
         <!-- 抽屜 4: 瀟瀟修 -->
         <div class="accordion-item" data-song="song4" style="background-color: #A3A1A2;">
-            <div class="flex items-center justify-between p-5 cursor-pointer" onclick="toggleAccordion('song4')">
-                <h3 class="text-xl font-semibold text-white">瀟瀟修</h3>
-                <span class="material-icons text-white arrow-icon">keyboard_arrow_down</span>
+            <div class="accordion-header" onclick="toggleAccordion('song4')">
+                <h3 class="text-s font-semibold text-white">瀟瀟修</h3>
+                <span class="material-icons text-white arrow-icon" style="font-size: 20px;">keyboard_arrow_down</span>
             </div>
-            <div class="accordion-content px-6 pb-6">
+            <div class="accordion-content">
+                <!-- 隱藏的音訊元素 -->
+                <audio id="audio-song4" src="audio/瀟瀟修.mp3"></audio>
+                
                 <!-- 播放器區塊 -->
                 <div class="mb-6">
                     <div class="flex items-center gap-4 mb-3">
-                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all">
-                            <span class="material-icons text-white text-3xl">play_arrow</span>
+                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" onclick="togglePlay('song4')">
+                            <span class="material-icons text-white text-3xl" id="play-icon-song4">play_arrow</span>
                         </button>
                         <div class="flex-1">
-                            <input type="range" min="0" max="100" value="0" class="w-full"/>
+                            <input type="range" min="0" max="100" value="0" class="w-full" id="progress-song4" oninput="seekAudio('song4', this.value)"/>
                         </div>
                     </div>
                     <div class="flex justify-between text-sm text-white text-opacity-80">
-                        <span>0:00</span>
-                        <span>3:42</span>
+                        <span id="current-time-song4">0:00</span>
+                        <span id="duration-song4">0:00</span>
                     </div>
                 </div>
 
                 <!-- 製作資訊 -->
                 <div class="mb-4 text-white">
                     <h4 class="font-semibold mb-2 text-lg">製作</h4>
-                    <p class="text-sm leading-relaxed opacity-90">作詞：—</p>
-                    <p class="text-sm leading-relaxed opacity-90">編曲：—</p>
-                    <p class="text-sm leading-relaxed opacity-90">改編：—</p>
+                    <p class="text-sm leading-relaxed opacity-90">作詞 —</p>
+                    <p class="text-sm leading-relaxed opacity-90">編曲 —</p>
+                    <p class="text-sm leading-relaxed opacity-90">改編 —</p>
                 </div>
 
                 <!-- 曲解 -->
@@ -319,44 +432,64 @@
                 <!-- 歌詞 -->
                 <div class="text-white">
                     <h4 class="font-semibold mb-2 text-lg">歌詞</h4>
-                    <div class="lyrics-container text-sm leading-loose opacity-90">
-                        <p>第一段歌詞...</p>
-                        <p>第二段歌詞...</p>
-                        <p>第三段歌詞...</p>
+                    <div class="lyrics-container text-sm leading-loose opacity-90 text-center">
+                        <p>瀟瀟修，瀟瀟修</p>
+                        <p>風中飄搖的柳</p>
+                        <p>歲月如流水</p>
+                        <p>一去不回頭</p>
+                        <p>瀟瀟修，瀟瀟修</p>
+                        <p>心中無盡的愁</p>
+                        <p>往事如煙雲</p>
+                        <p>隨風飄散走</p>
+                        <p>曾經的夢想</p>
+                        <p>如今已遠去</p>
+                        <p>留下的只有</p>
+                        <p>深深的回憶</p>
+                        <p>瀟瀟修，瀟瀟修</p>
+                        <p>人生如夢遊</p>
+                        <p>珍惜當下時</p>
+                        <p>莫讓時光流</p>
+                        <p>瀟瀟修，瀟瀟修</p>
+                        <p>心中永不休</p>
+                        <p>願君多珍重</p>
+                        <p>歲月共悠悠</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 抽屜 5: 熟能忘記 -->
+        <!-- 抽屜 5: 熟能忘記 (最下方，z-index 最高) -->
         <div class="accordion-item" data-song="song5" style="background-color: #4A2C2F;">
-            <div class="flex items-center justify-between p-5 cursor-pointer" onclick="toggleAccordion('song5')">
-                <h3 class="text-xl font-semibold text-white">熟能忘記</h3>
-                <span class="material-icons text-white arrow-icon">keyboard_arrow_down</span>
+            <div class="accordion-header" onclick="toggleAccordion('song5')">
+                <h3 class="text-s font-semibold text-white">熟能忘記</h3>
+                <span class="material-icons text-white arrow-icon" style="font-size: 20px;">keyboard_arrow_down</span>
             </div>
-            <div class="accordion-content px-6 pb-6">
+            <div class="accordion-content">
+                <!-- 隱藏的音訊元素 -->
+                <audio id="audio-song5" src="audio/熟能忘記.mp3"></audio>
+                
                 <!-- 播放器區塊 -->
                 <div class="mb-6">
                     <div class="flex items-center gap-4 mb-3">
-                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all">
-                            <span class="material-icons text-white text-3xl">play_arrow</span>
+                        <button class="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center transition-all" onclick="togglePlay('song5')">
+                            <span class="material-icons text-white text-3xl" id="play-icon-song5">play_arrow</span>
                         </button>
                         <div class="flex-1">
-                            <input type="range" min="0" max="100" value="0" class="w-full"/>
+                            <input type="range" min="0" max="100" value="0" class="w-full" id="progress-song5" oninput="seekAudio('song5', this.value)"/>
                         </div>
                     </div>
                     <div class="flex justify-between text-sm text-white text-opacity-80">
-                        <span>0:00</span>
-                        <span>3:42</span>
+                        <span id="current-time-song5">0:00</span>
+                        <span id="duration-song5">0:00</span>
                     </div>
                 </div>
 
                 <!-- 製作資訊 -->
                 <div class="mb-4 text-white">
                     <h4 class="font-semibold mb-2 text-lg">製作</h4>
-                    <p class="text-sm leading-relaxed opacity-90">作詞：善才大仙 (2011.08.14 北部行德班22期)</p>
-                    <p class="text-sm leading-relaxed opacity-90">編曲：吳老師祐平</p>
-                    <p class="text-sm leading-relaxed opacity-90">改編：賢德團隊</p>
+                    <p class="text-sm leading-relaxed opacity-90">作詞 善才大仙 (2011.08.14 北部行德班22期)</p>
+                    <p class="text-sm leading-relaxed opacity-90">編曲 吳老師祐平</p>
+                    <p class="text-sm leading-relaxed opacity-90">改編 賢德團隊</p>
                 </div>
 
                 <!-- 曲解 -->
@@ -369,7 +502,7 @@
                 <!-- 歌詞 -->
                 <div class="text-white">
                     <h4 class="font-semibold mb-2 text-lg">歌詞</h4>
-                    <div class="lyrics-container text-sm leading-loose opacity-90">
+                    <div class="lyrics-container text-sm leading-loose opacity-90 text-center">
                         <p>遠遠的那天際</p>
                         <p>倏忽一掠朝迎曦</p>
                         <p>輕輕的這風起</p>
@@ -385,41 +518,117 @@
     </div>
 
     <script>
-        // 背景圖上傳功能
-        const backgroundArea = document.getElementById('backgroundArea');
-        const backgroundUpload = document.getElementById('backgroundUpload');
-
-        backgroundArea.addEventListener('click', () => {
-            backgroundUpload.click();
-        });
-
-        backgroundUpload.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    backgroundArea.style.backgroundImage = `url(${e.target.result})`;
-                    backgroundArea.classList.add('has-image');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
         // 手風琴展開/收合功能
         function toggleAccordion(songId) {
             const clickedItem = document.querySelector(`[data-song="${songId}"]`);
+            const container = document.getElementById('accordionContainer');
             const allItems = document.querySelectorAll('.accordion-item');
             
-            // 關閉所有其他抽屜
+            // 判斷是否已經展開
+            const isAlreadyOpen = clickedItem.classList.contains('open');
+            
+            // 關閉所有其他抽屜並暫停音樂
             allItems.forEach(item => {
                 if (item !== clickedItem && item.classList.contains('open')) {
                     item.classList.remove('open');
+                    const itemSongId = item.getAttribute('data-song');
+                    pauseAudio(itemSongId);
                 }
             });
             
             // 切換當前抽屜
-            clickedItem.classList.toggle('open');
+            if (isAlreadyOpen) {
+                clickedItem.classList.remove('open');
+                container.classList.remove('expanded');
+                pauseAudio(songId);
+            } else {
+                clickedItem.classList.add('open');
+                container.classList.add('expanded');
+            }
         }
+
+        // 播放/暫停音樂
+        function togglePlay(songId) {
+            const audio = document.getElementById(`audio-${songId}`);
+            const playIcon = document.getElementById(`play-icon-${songId}`);
+            
+            if (audio.paused) {
+                // 暫停所有其他音樂
+                pauseAllAudio();
+                
+                audio.play();
+                playIcon.textContent = 'pause';
+            } else {
+                audio.pause();
+                playIcon.textContent = 'play_arrow';
+            }
+        }
+
+        // 暫停指定音樂
+        function pauseAudio(songId) {
+            const audio = document.getElementById(`audio-${songId}`);
+            const playIcon = document.getElementById(`play-icon-${songId}`);
+            
+            if (audio && !audio.paused) {
+                audio.pause();
+                playIcon.textContent = 'play_arrow';
+            }
+        }
+
+        // 暫停所有音樂
+        function pauseAllAudio() {
+            for (let i = 1; i <= 5; i++) {
+                pauseAudio(`song${i}`);
+            }
+        }
+
+        // 拖動進度條
+        function seekAudio(songId, value) {
+            const audio = document.getElementById(`audio-${songId}`);
+            const seekTime = (audio.duration / 100) * value;
+            audio.currentTime = seekTime;
+        }
+
+        // 格式化時間顯示
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // 初始化所有音樂播放器
+        function initAudioPlayers() {
+            for (let i = 1; i <= 5; i++) {
+                const songId = `song${i}`;
+                const audio = document.getElementById(`audio-${songId}`);
+                const progress = document.getElementById(`progress-${songId}`);
+                const currentTime = document.getElementById(`current-time-${songId}`);
+                const duration = document.getElementById(`duration-${songId}`);
+
+                // 載入音訊後更新總時長
+                audio.addEventListener('loadedmetadata', () => {
+                    duration.textContent = formatTime(audio.duration);
+                });
+
+                // 更新播放進度
+                audio.addEventListener('timeupdate', () => {
+                    const progressPercent = (audio.currentTime / audio.duration) * 100;
+                    progress.value = progressPercent;
+                    currentTime.textContent = formatTime(audio.currentTime);
+                });
+
+                // 播放結束時重置
+                audio.addEventListener('ended', () => {
+                    document.getElementById(`play-icon-${songId}`).textContent = 'play_arrow';
+                    progress.value = 0;
+                    currentTime.textContent = '0:00';
+                });
+            }
+        }
+
+        // 頁面載入時初始化
+        window.addEventListener('DOMContentLoaded', initAudioPlayers);
     </script>
 </body>
 </html>
